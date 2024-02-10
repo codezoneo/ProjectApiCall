@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MoviesList from './components/MoviesList';
 import './App.css';
 
@@ -12,6 +12,10 @@ function App() {
     releaseDate: ''
   });
 
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, []); // Fetch movies on initial render
+
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setNewMovieData(prevState => ({
@@ -23,6 +27,12 @@ function App() {
   const handleAddMovie = () => {
     console.log(newMovieData);
     // Here you can add logic to send the new movie data to your backend or update state, etc.
+  };
+
+  const handleDeleteMovie = (id) => {
+    const updatedMovies = movies.filter(movie => movie.id !== id);
+    setMovies(updatedMovies);
+    // Here you can add logic to delete the movie from the backend
   };
 
   async function fetchMoviesHandler() {
@@ -57,7 +67,7 @@ function App() {
   } else if (error) {
     content = <p>{error}</p>;
   } else if (movies.length > 0) {
-    content = <MoviesList movies={movies} />;
+    content = <MoviesList movies={movies} onDeleteMovie={handleDeleteMovie} />;
   } else {
     content = <p>Found no movies</p>;
   }
