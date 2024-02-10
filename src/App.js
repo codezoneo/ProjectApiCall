@@ -1,68 +1,92 @@
 import React, { useState } from 'react';
-
 import MoviesList from './components/MoviesList';
 import './App.css';
 
- function App() {
-  const [movies,setMovies] = useState([])
-  const [isLoading,setIsLoading] = useState(false)
-  const [error,setError] = useState(null)
+function App() {
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [newMovieData, setNewMovieData] = useState({
+    title: '',
+    openingText: '',
+    releaseDate: ''
+  });
 
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setNewMovieData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
 
- async function fetchMoviesHandler() {
-  setIsLoading(false);
-  setError(null);
-  try{
-     const response = await fetch("https://swapi.dev/api/films/")
-  const data = await response.json();
+  const handleAddMovie = () => {
+    console.log(newMovieData);
+    // Here you can add logic to send the new movie data to your backend or update state, etc.
+  };
 
-  if(!response.ok){
-    throw new Error('something went wrong!')
-  }
-  
-    const transformedMovies = data.results.map(movieData => {
-      return {
-        id:movieData.episode_id,
-        title: movieData.title,
-        openingText:movieData.opening_crawl,
-        releaseDate: movieData.release_date
+  async function fetchMoviesHandler() {
+    setIsLoading(true);
+    setError(null);
 
+    try {
+      const response = await fetch("https://swapi.dev/api/films/");
+      if (!response.ok) {
+        throw new Error('Something went wrong!');
       }
-    })
-    setMovies(transformedMovies);
-    setIsLoading(false)
-    
-  } catch(error){
-setError(error.message)
+      
+      const data = await response.json();
+      const transformedMovies = data.results.map(movieData => ({
+        id: movieData.episode_id,
+        title: movieData.title,
+        openingText: movieData.opening_crawl,
+        releaseDate: movieData.release_date
+      }));
+      
+      setMovies(transformedMovies);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   }
-let content = <p>Found no movies</p>
 
-if(movies.length>0){
-  content = <MoviesList movies={movies} />
-}
- 
-if(error){
-  content= <p>{error}</p>
-}
-  if(!isLoading){
-    content = <p>Loading...</p>
+  let content = null;
+  if (isLoading) {
+    content = <p>Loading...</p>;
+  } else if (error) {
+    content = <p>{error}</p>;
+  } else if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
+  } else {
+    content = <p>Found no movies</p>;
   }
-  
- 
- 
+
   return (
     <React.Fragment>
       <section>
-        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+        <form className="add-movie-form">
+          <div className="form-control">
+            <label htmlFor="title">Title</label>
+            <input type="text" id="title" name="title" value={newMovieData.title} onChange={handleInputChange} />
+          </div>
+          <div className="form-control">
+            <label htmlFor="openingText">Opening Text</label>
+            <textarea id="openingText" name="openingText" value={newMovieData.openingText} onChange={handleInputChange} />
+          </div>
+          <div className="form-control">
+            <label htmlFor="releaseDate">Release Date</label>
+            <input type="text" id="releaseDate" name="releaseDate" value={newMovieData.releaseDate} onChange={handleInputChange} />
+          </div>
+          <button type="button" onClick={handleAddMovie}>Add Movie</button>
+        </form>
       </section>
       <section>
-        {!isLoading && movies.length>0 && <MoviesList movies={movies} />}
-        {!isLoading && movies.length ===0 && <p>found no movies</p>}
-        {isLoading && <p>Loading...</p>}
-        {!isLoading && error && <p>{error}</p>}
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
+      <section>{content}</section>
     </React.Fragment>
   );
+}
 
-  
 export default App;
